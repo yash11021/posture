@@ -3,12 +3,10 @@ title: PostSURE
 emoji: 🧘
 colorFrom: green
 colorTo: blue
-sdk: gradio
-sdk_version: 4.44.1
+sdk: docker
 app_file: app.py
 pinned: false
 license: mit
-python_version: 3.11
 ---
 
 # Real-time Posture Classification
