@@ -3,6 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install system dependencies for OpenCV and MediaPipe
+# pkg-config, gcc, and ffmpeg dev libs are required for building PyAV from source
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -10,6 +11,15 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     curl \
+    pkg-config \
+    gcc \
+    libavformat-dev \
+    libavcodec-dev \
+    libavdevice-dev \
+    libavutil-dev \
+    libswscale-dev \
+    libswresample-dev \
+    libavfilter-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for caching
