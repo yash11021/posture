@@ -23,8 +23,16 @@ from classifier import PostureClassifier, LandmarkNormalizer
 
 # WebRTC configuration for STUN server (needed for NAT traversal)
 # Using Google's public STUN server which is reliable for most networks
+# WebRTC configuration
+# Using a free open relay list which is often more reliable than just Google's STUN
 RTC_CONFIGURATION = RTCConfiguration(
-    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+    {"iceServers": [
+        {"urls": ["stun:stun.l.google.com:19302"]},
+        {"urls": ["stun:stun1.l.google.com:19302"]},
+        {"urls": ["stun:stun2.l.google.com:19302"]},
+        {"urls": ["stun:stun3.l.google.com:19302"]},
+        {"urls": ["stun:stun4.l.google.com:19302"]},
+    ]}
 )
 
 
