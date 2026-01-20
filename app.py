@@ -318,11 +318,10 @@ with gr.Blocks(
                 webcam_input = gr.Image(sources=["webcam"], streaming=True, label="Your Camera")
                 webcam_output = gr.Image(label="Analysis")
 
-            webcam_input.stream(
+            webcam_input.change(
                 fn=process_realtime,
                 inputs=webcam_input,
-                outputs=[webcam_output, alert_status],
-                stream_every=0.1
+                outputs=[webcam_output, alert_status]
             )
 
         with gr.TabItem("Upload Image"):
