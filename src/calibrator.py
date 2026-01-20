@@ -8,7 +8,7 @@ import torch.nn as nn
 import pickle
 from datetime import datetime
 
-from classifier import PostureClassifier
+from classifier import PostureClassifier, ImprovedPostureClassifier, LandmarkNormalizer
 
 
 class PostureCalibrator:
@@ -181,33 +181,62 @@ class PostureCalibrator:
         return samples
     
     def train(self, X, y, num_epochs=100, batch_size=8, learning_rate=0.001,
-              print_every=10, model_name='posture_model.pth'):
+              print_every=10, model_name='posture_model.pth', use_improved=False,
+              normalize_landmarks=True):
         """Train the model on provided data"""
-        
+
         model_path = os.path.join(self.model_dir, model_name)
-        
-        print("\n🔧 Training model:")
+
+        print("\n" + "="*60)
+        print("TRAINING MODEL")
+        print("="*60)
+        print(f"   Architecture: {'ImprovedPostureClassifier' if use_improved else 'PostureClassifier'}")
+        print(f"   Normalize landmarks: {normalize_landmarks}")
         print(f"   Epochs: {num_epochs}")
         print(f"   Batch size: {batch_size}")
         print(f"   Learning rate: {learning_rate}")
         print(f"   Training samples: {len(X)}")
         print()
-        
+
+        # Normalize landmarks if requested
+        if normalize_landmarks:
+            print("Normalizing landmarks...")
+            normalizer = LandmarkNormalizer()
+            X_normalized = []
+            for sample in X:
+                try:
+                    X_normalized.append(normalizer.normalize(sample))
+                except Exception:
+                    X_normalized.append(sample)  # Fallback to raw if normalization fails
+            X = np.array(X_normalized, dtype=np.float32)
+            print(f"   Normalized {len(X)} samples")
+
         # Shuffle
         indices = np.random.permutation(len(X))
         X = X[indices]
         y = y[indices]
-        
+
         # Convert to tensors
         X_tensor = torch.FloatTensor(X)
         y_tensor = torch.LongTensor(y)
-        
+
         dataset = torch.utils.data.TensorDataset(X_tensor, y_tensor)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
-        
+
         # Initialize model
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        model = PostureClassifier().to(device)
+        print(f"   Device: {device}")
+
+        if use_improved:
+            model = ImprovedPostureClassifier(input_size=66, num_classes=2).to(device)
+        else:
+            model = PostureClassifier().to(device)
+
+        # Count parameters
+        num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        print(f"   Model parameters: {num_params:,}")
+        print()
+
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
         
@@ -357,22 +386,36 @@ class PostureCalibrator:
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Posture calibration and training")
+    parser.add_argument('--improved', action='store_true', help='Use improved model architecture')
+    parser.add_argument('--no-normalize', action='store_true', help='Skip landmark normalization')
+    args = parser.parse_args()
+
     print("\n" + "="*60)
     print("POSTURE MONITOR - CALIBRATION")
     print("="*60)
+
+    if args.improved:
+        print("Using: ImprovedPostureClassifier (residual blocks + batch norm)")
+    else:
+        print("Using: PostureClassifier (simple MLP)")
+
     print("\nChoose mode:")
     print("  1 - FRESH START (discard old data, collect new)")
     print("  2 - APPEND (add to existing data)")
     print("  3 - RETRAIN ONLY (use existing data, no collection)")
+    print("  4 - RETRAIN WITH IMPROVED MODEL (existing data, better architecture)")
     print("="*60)
-    
-    choice = input("\nEnter 1, 2, or 3: ").strip()
-    
+
+    choice = input("\nEnter 1, 2, 3, or 4: ").strip()
+
     calibrator = PostureCalibrator()
-    
+
     if choice == '1':
         # Fresh start
-        print("\n🆕 Starting fresh (old data will be replaced)")
+        print("\nStarting fresh (old data will be replaced)")
         calibrator.run_calibration(
             mode='fresh',
             num_samples=30,
@@ -381,37 +424,65 @@ if __name__ == "__main__":
             batch_size=8,
             learning_rate=0.001
         )
-        
+
     elif choice == '2':
         # Append to existing
-        print("\n➕ Appending to existing data")
+        print("\nAppending to existing data")
         calibrator.run_calibration(
             mode='append',
-            num_samples=30,  # Add 30 more of each
+            num_samples=30,
             delay_frames=10,
             num_epochs=100,
             batch_size=8,
             learning_rate=0.001
         )
-        
+
     elif choice == '3':
         # Just retrain on existing data
-        print("\n🔄 Retraining on existing data")
-        
+        print("\nRetraining on existing data")
+
         good_samples, bad_samples = calibrator.load_samples()
-        
+
         if not good_samples or not bad_samples:
-            print("❌ No existing training data found!")
+            print("No existing training data found!")
             print(f"   Looking for: {calibrator.data_file}")
             sys.exit(1)
-        
+
         X = np.array(good_samples + bad_samples, dtype=np.float32)
         y = np.array([1]*len(good_samples) + [0]*len(bad_samples), dtype=np.int64)
-        
-        calibrator.train(X, y, num_epochs=150, batch_size=8, learning_rate=0.0005)
-        
-        print("\n✅ Retraining complete!")
-        
+
+        calibrator.train(X, y, num_epochs=150, batch_size=8, learning_rate=0.0005,
+                        use_improved=args.improved, normalize_landmarks=not args.no_normalize)
+
+        print("\nRetraining complete!")
+
+    elif choice == '4':
+        # Retrain with improved model
+        print("\nRetraining with IMPROVED model architecture")
+
+        good_samples, bad_samples = calibrator.load_samples()
+
+        if not good_samples or not bad_samples:
+            print("No existing training data found!")
+            print(f"   Looking for: {calibrator.data_file}")
+            sys.exit(1)
+
+        X = np.array(good_samples + bad_samples, dtype=np.float32)
+        y = np.array([1]*len(good_samples) + [0]*len(bad_samples), dtype=np.int64)
+
+        calibrator.train(
+            X, y,
+            num_epochs=200,
+            batch_size=8,
+            learning_rate=0.001,
+            use_improved=True,
+            normalize_landmarks=True,
+            model_name='posture_model_improved.pth'
+        )
+
+        print("\nImproved model training complete!")
+        print("Model saved to: models/posture_model_improved.pth")
+
     else:
-        print("❌ Invalid choice!")
+        print("Invalid choice!")
         sys.exit(1)
