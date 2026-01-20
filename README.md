@@ -1,3 +1,15 @@
+---
+title: PostSURE
+emoji: 🧘
+colorFrom: green
+colorTo: blue
+sdk: gradio
+sdk_version: 4.44.0
+app_file: app.py
+pinned: false
+license: mit
+---
+
 # Real-time Posture Classification
 
 A PyTorch-based posture classification system using MediaPipe pose estimation. Detects good vs bad sitting posture in real-time from webcam input.
