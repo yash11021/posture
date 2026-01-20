@@ -286,7 +286,7 @@ def main():
         webrtc_ctx = webrtc_streamer(
             key="posture-monitor",
             mode=WebRtcMode.SENDRECV,
-            rtc_configuration=RTC_CONFIGURATION,
+            frontend_rtc_configuration=RTC_CONFIGURATION,
             video_processor_factory=VideoProcessor,
             media_stream_constraints={"video": True, "audio": False},
             async_processing=True,
