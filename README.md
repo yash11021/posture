@@ -21,7 +21,7 @@ A PyTorch-based posture classification system using MediaPipe pose estimation. D
 - **Custom PyTorch neural network** with residual connections and batch normalization
 - **Landmark normalization** for position/scale invariant predictions
 - **Temporal smoothing** to reduce prediction jitter
-- **Web interface** via Gradio for easy demo access
+- **Web interface** via Streamlit for easy demo access
 - **Training pipeline** with data collection and model training
 
 ## Architecture
@@ -80,18 +80,18 @@ This allows the model to generalize across different:
 
 ```
 posture/
-├── app.py                  # Gradio web interface (HuggingFace Spaces)
+├── app.py                  # Streamlit web interface (HuggingFace Spaces)
+├── Dockerfile              # Docker config for HuggingFace Spaces
 ├── src/
-│   ├── classifier.py       # PyTorch model definitions
+│   ├── classifier.py       # PyTorch model definitions + normalization
 │   ├── calibrator.py       # Data collection and training
-│   ├── monitor.py          # Real-time inference (OpenCV)
+│   ├── monitor.py          # Real-time inference (OpenCV CLI)
 │   └── setup.sh            # Environment setup
 ├── models/
 │   └── posture_model.pth   # Trained model weights
 ├── data/
 │   └── training_samples.pkl # Collected training data
-├── requirements.txt        # Local development dependencies
-└── requirements-hf.txt     # HuggingFace Spaces dependencies
+└── requirements.txt        # Dependencies
 ```
 
 ## Quick Start
@@ -145,14 +145,14 @@ python src/monitor.py --test  # Demo mode (random predictions)
 ## Deployment to HuggingFace Spaces
 
 1. Create a new Space at [huggingface.co/new-space](https://huggingface.co/new-space)
-2. Select **Gradio** as the SDK
+2. Select **Docker** as the SDK
 3. Clone and push:
    ```bash
    git remote add hf https://huggingface.co/spaces/YOUR_USERNAME/posture-classifier
    git push hf main
    ```
 
-The Space will automatically use `app.py` and `requirements-hf.txt`.
+The Space will automatically build using the `Dockerfile` and run the Streamlit app on port 7860.
 
 ## Technical Details
 
@@ -199,4 +199,4 @@ MIT
 
 ---
 
-Built with PyTorch, MediaPipe, and Gradio.
+Built with PyTorch, MediaPipe, OpenCV, and Streamlit.

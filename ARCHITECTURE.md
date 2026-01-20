@@ -25,7 +25,8 @@ Internal documentation for understanding the codebase, data flow, and model arch
 
 ```
 posture/
-├── app.py                    # Gradio web interface (HuggingFace deployment)
+├── app.py                    # Streamlit web interface (HuggingFace deployment)
+├── Dockerfile                # Docker config for HuggingFace Spaces
 ├── src/
 │   ├── classifier.py         # Model definitions + normalization
 │   ├── calibrator.py         # Data collection + training pipeline
@@ -324,31 +325,45 @@ monitor.run()
 
 ---
 
-### 7. `PostureDemo` (app.py:31)
+### 7. Streamlit App (app.py)
 
-**Purpose:** Gradio-compatible version for web deployment
+**Purpose:** Web interface for HuggingFace Spaces deployment using Docker SDK
+
+**Key Functions:**
 
 ```python
-demo = PostureDemo(model_path='models/posture_model.pth', use_improved=False)
-result_frame, trigger_alert = demo.process_frame(frame)
+@st.cache_resource
+def load_model(model_path="models/posture_model.pth"):
+    """Load PyTorch model once and cache it"""
+
+@st.cache_resource
+def load_mediapipe():
+    """Load MediaPipe pose detector"""
+
+def extract_landmarks(pose, frame):
+    """Extract 33 pose landmarks from a frame"""
+
+def predict_posture(model, device, model_loaded, landmarks, normalizer):
+    """Run inference on landmarks, returns (prediction, confidence, source)"""
+
+def draw_results(frame, pose_landmarks, prediction, confidence, ...):
+    """Draw pose skeleton and prediction overlay on frame"""
 ```
 
-**Additional Features over PostureMonitor:**
-- Alert system with cooldown
-- Returns alert trigger for JavaScript audio
-- Frame processing optimized for Gradio streaming
+**Features:**
+- Two input modes: Webcam capture (`st.camera_input`) and image upload
+- Visual feedback with colored borders (green=good, red=bad)
+- Confidence bar overlay
+- Demo mode with random predictions when model not found
+- Cached resources for efficient loading
 
-**Alert Logic:**
-```python
-consecutive_bad = 0      # Counter for bad posture frames
-bad_threshold = 3        # Frames before alert
-alert_cooldown = 3.0     # Seconds between alerts
-
-if prediction == 0:  # Bad posture
-    consecutive_bad += 1
-    if consecutive_bad >= bad_threshold and cooldown_passed:
-        trigger_alert = True
-        consecutive_bad = 0  # Reset
+**User Flow:**
+```
+1. User takes photo via webcam OR uploads image
+2. MediaPipe extracts pose landmarks
+3. LandmarkNormalizer transforms to invariant features
+4. PyTorch model predicts good/bad posture
+5. Results displayed with skeleton overlay and metrics
 ```
 
 ---
@@ -372,7 +387,7 @@ if prediction == 0:  # Bad posture
 └──────────────┘     └──────────────┘     └──────────────┘
 ```
 
-### Inference Flow
+### Inference Flow (Web App & CLI)
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
@@ -385,7 +400,7 @@ if prediction == 0:  # Bad posture
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
 │   DISPLAY    │◄────│   SMOOTH     │◄────│    MODEL     │
 │              │     │              │     │              │
-│ green/red    │     │ 5-frame avg  │     │ softmax prob │
+│ green/red    │     │ smoothing*   │     │ softmax prob │
 └──────────────┘     └──────────────┘     └──────────────┘
 ```
 
