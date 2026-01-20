@@ -22,6 +22,7 @@ from classifier import PostureClassifier, LandmarkNormalizer
 
 
 # WebRTC configuration for STUN server (needed for NAT traversal)
+# Using Google's public STUN server which is reliable for most networks
 RTC_CONFIGURATION = RTCConfiguration(
     {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
 )
