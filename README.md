@@ -28,7 +28,7 @@ A microservices-based posture classification system using MediaPipe (browser) an
 
 ## Quick Links
 
-- **Frontend**: [postsure.vercel.app](https://postsure.vercel.app) *(update after deploy)*
+- **Frontend**: [[postsure.vercel.app](https://posture-aa4qzsu53-yash11021s-projects.vercel.app)]
 - **API Docs**: [postSURE.hf.space/apidocs](https://yashrajsinha-postsure.hf.space/apidocs/)
 
 ## Features
