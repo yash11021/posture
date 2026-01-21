@@ -1,8 +1,6 @@
-opencv-python-headless==4.8.0.74
-mediapipe==0.10.9
+flask>=3.0.0
+flask-cors>=4.0.0
+flasgger>=0.9.7
 torch==2.2.1
 numpy<2.0.0
-streamlit==1.35.0
-streamlit-webrtc==0.47.0
-av<14.0.0
-aioice==0.9.0
+gunicorn>=21.0.0

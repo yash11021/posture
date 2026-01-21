@@ -1,20 +1,27 @@
-name: Sync to Hugging Face hub
+name: Deploy Backend to HuggingFace
+
 on:
   push:
     branches: [main]
+    paths:
+      - 'api/**'
+      - 'src/**'
+      - 'models/**'
+      - 'requirements.txt'
+      - 'Dockerfile'
   workflow_dispatch:
 
 jobs:
-  sync-to-hub:
+  deploy-backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
-      - name: Push to hub
+
+      - name: Push to HuggingFace Spaces
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # Use the 'force' to overwrite the HF default README
           git push --force https://yashrajsinha:$HF_TOKEN@huggingface.co/spaces/yashrajsinha/postSURE main

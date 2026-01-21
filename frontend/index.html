@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PostSURE - Posture Classifier</title>
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>🧘 PostSURE</h1>
+        <p>Real-time Posture Classification</p>
+      </header>
+      
+      <main>
+        <div id="video-container">
+          <video id="webcam" autoplay playsinline></video>
+          <canvas id="overlay"></canvas>
+          <div id="status-bar">
+            <span id="status-text">Initializing...</span>
+            <span id="confidence"></span>
+          </div>
+        </div>
+        
+        <div id="controls">
+          <button id="start-btn" class="primary">Start Camera</button>
+          <div id="mode-selector">
+            <button id="mode-monitor" class="active">Monitor</button>
+            <button id="mode-calibrate">Calibrate</button>
+          </div>
+        </div>
+        
+        <div id="calibration-panel" style="display: none;">
+          <h3>Calibration Mode</h3>
+          <p>Collect training samples for your posture model.</p>
+          <div id="calibration-controls">
+            <button id="capture-good" class="success">Capture Good Posture</button>
+            <button id="capture-bad" class="danger">Capture Bad Posture</button>
+          </div>
+          <div id="sample-counts">
+            <span>Good: <strong id="good-count">0</strong></span>
+            <span>Bad: <strong id="bad-count">0</strong></span>
+          </div>
+          <button id="train-btn" class="primary" disabled>Train Model</button>
+        </div>
+      </main>
+      
+      <footer>
+        <p>Built with MediaPipe + PyTorch</p>
+      </footer>
+    </div>
+    
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
